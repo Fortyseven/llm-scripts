@@ -26,7 +26,7 @@ response = ollama.chat(
     ],
     # stream=True,
     options={
-        # 'temperature': 0.1,
+        'temperature': 0.2,
     },
 )
 
