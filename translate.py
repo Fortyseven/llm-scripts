@@ -5,10 +5,33 @@ import json
 import ollama
 from rich import print
 
-MODEL='llama3:latest'
+MODEL='llama3.2:latest'
 #MODEL='phi3:latest'
-PROMPT="""
-You are a world class language translator. Translate the following text into English. Provide a simple pronunciation of the translated text for native English speakers, and any notes that might help give context for the translation. Respond ONLY with a properly JSON object (don't forget to escape any quotation marks) exactly like this: {\"src_language\":$LANGUAGE, \"translation\": $TRANSLATION, \"src_pronunciation\":$SRC_PRONUNCIATION,\"notes\":$NOTES}\n
+JSON_TEMPLATE = """
+{
+    "src_language":"$LANGUAGE",
+    "translation": "$TRANSLATION",
+    "src_pronunciation":"$SRC_PRONUNCIATION",
+    "notes":"$NOTES"
+}
+"""
+
+PROMPT=f"""
+You are a world class language translator.
+
+Translate the provided text into English. Translate the entire provided text.
+
+If you cannot confidently and correctly translate the text, please respond with "I cannot confidently translate this text."
+
+Do not invent or guess at a word's meaning. If you are unsure of a word's meaning, you may provide a literal translation of the word.
+
+Provide a simple pronunciation of the translated text for native English speakers. If you cannot provide a pronunciation, leave this field blank.
+
+Also add notes that might help give context for the translation.
+
+Respond ONLY with a properly structured JSON object (don't forget to escape any quotation marks) exactly like this:
+
+{JSON_TEMPLATE}\n
 """
 args = " ".join(sys.argv[1:])
 
