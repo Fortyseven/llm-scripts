@@ -1,5 +1,6 @@
 This is a personal collection of small LLM scripts using [Ollama](https://ollama.com/) to do various tasks on the command line. The aim is to keep these independent of each other, never exceeding one file in size.
 
+That most of these are wrappers around a prompt should not be surprising.
 
 I'm not currently accepting patches or bug fixes, but feel free to toss over suggestions for improvements, or point out other small scripts that might be of interest.
 
