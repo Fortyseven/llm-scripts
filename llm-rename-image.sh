@@ -5,7 +5,12 @@ PROMPT="Create a unique, descriptive lowercase filename for this image; return o
 
 # put arguments into IMAGE_PATH
 
-IMAGE_PATH=$1
+IMAGE_PATH="$1"
+
+if [ -z "$IMAGE_PATH" ]; then
+    echo "No path provided"
+    exit 1
+fi
 
 # check if image exists
 
