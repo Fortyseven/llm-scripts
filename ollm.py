@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 """
-This is a flimsy Ollama-specific implementation for Datasette's "LLM" tool. Right up until I found out there was already Ollama compatibility available if I'd just dig a bit further. Oh well.
+This is a flimsy Ollama-specific implementation of Datasette's "LLM" tool. Right up until I found out there was already Ollama compatibility available if I'd just dig a bit further. Oh well.
 
 This script is largely abandoned, and is probably incomplete. It's here for posterity. Or maybe it'll help someone else.
 
 https://llm.datasette.io/
 """
+
+# ./ollm.py -i ollm.py "Write a joke about this code." | /home/fortyseven/opt/ai/piper/piper --model /home/fortyseven/opt/ai/glados/models/glados.onnx --output-raw | aplay -r 22050 -f S16_LE -t raw -
 
 import ollama
 import argparse
