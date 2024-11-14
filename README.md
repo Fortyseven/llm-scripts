@@ -12,6 +12,8 @@ I'm not currently accepting patches or bug fixes, but feel free to toss over sug
 - For **Python** scripts:
     - Python 3.12 (though none use anything bleeding edge, so give it a go)
     - Most require the `ollama` and `rich` packages; but these are so common for me I just tossed them into my system Python.
+
 - For **shell** scripts:
     - Bash on Ubuntu; nothing special
     - I'd be surprised if I was using anything beyond basic shell utilities in them, but beware.
+    - Some of these use Datasette's `llm` tool: https://llm.datasette.io/en/stable/
