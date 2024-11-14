@@ -42,7 +42,7 @@ read -p "Accept? (y/n) " -n 1 -r
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     mv "$IMAGE_PATH" "$IMAGE_DIR/$BASENAME.$EXTENSION"
-    echo "OK"
+    echo "New path: $IMAGE_DIR/$BASENAME.$EXTENSION"
 else
     echo "Aborted"
 fi
