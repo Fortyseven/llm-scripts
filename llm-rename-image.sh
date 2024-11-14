@@ -21,6 +21,10 @@ fi
 
 EXTENSION=$(echo $IMAGE_PATH | rev | cut -d '.' -f 1 | rev)
 
+# get IMAGE_PATH path
+
+IMAGE_DIR=$(dirname "$IMAGE_PATH")
+
 OUTPUT=$(llm -m "$MODEL" -a "$IMAGE_PATH" "$PROMPT")
 
 # split by final period, save first part to BASENAME
@@ -37,7 +41,7 @@ echo "New filename: $BASENAME.$EXTENSION"
 read -p "Accept? (y/n) " -n 1 -r
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    mv "$IMAGE_PATH" "$BASENAME.$EXTENSION"
+    mv "$IMAGE_PATH" "$IMAGE_DIR/$BASENAME.$EXTENSION"
     echo "OK"
 else
     echo "Aborted"
