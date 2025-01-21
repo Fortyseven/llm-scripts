@@ -8,18 +8,29 @@
 
 DEBUG=False
 
-SPROMPT="""
-You are a world-class Linux administrator. You will be asked to provide a command that will run in a Ubuntu Linux desktop terminal. Provide the complete command, then an explanation for what each argument does, and any notes that might help give context for the command. Keep responses concise and to the point.
+SPROMPT="""You are a world-class Linux administrator. You will be asked to provide a command that will run in a Ubuntu Linux desktop terminal.
+
+- Provide the complete command that performs the operation the user wants to complete.
+
+- Provide an explanation for what each argument does.
+
+- Provide any notes that might help give context for the command.
+
+- Provide your interpretation of what the user request is asking to do.
+
+Keep responses concise and to the point.
 
 Do not invent commands or arguments. Use only those that you are certain are available in the Ubuntu Linux desktop terminal.
 
-If you cannot complete the request, leave everything else blank, but only provide an error message.
+If you cannot complete the request (because the user requrested an impossible thing, or provided nonsense), leave everything else blank, but only provide an error message.
 """
 
 # MODEL="llama3.1"
 # MODEL="mistral-small:latest"
 MODEL="llama3.2"
 OPTIONS=""
+TEMPERATURE=0.15
+NUM_CTX=2048
 
 import sys
 import json
@@ -41,6 +52,7 @@ class CmdResponse(BaseModel):
     notes: str
     example_usage: str
     error_message: Optional[str]
+    user_request: str
 
 args = " ".join(sys.argv[1:])
 
@@ -61,8 +73,8 @@ response = ollama.chat(
         }
     ],
     options={
-        'temperature': 0.2,
-        'num_ctx': 2048
+        'temperature': TEMPERATURE,
+        'num_ctx': NUM_CTX
     },
     format=CmdResponse.model_json_schema()
 )
@@ -78,7 +90,7 @@ try:
 
     response = json.loads(response)
 
-    table = Table(show_header=False, padding=(0, 0), show_lines=False)
+    table = Table(show_header=False, padding=(0, 1), show_lines=False, show_edge=False)
 
     # table.add_column("Command", style="cyan")
 
@@ -89,16 +101,22 @@ try:
 
     # iterate each argument in the arg_explanation array
     if 'arg_explanation' in response and len(response['arg_explanation']):
-        subtable = Table(show_header=False)
-        subtable.add_column("Argument", style="cyan")
+        subtable = Table(show_header=False, show_lines=False, padding=(0, 1), show_edge=False)
+        subtable.add_column("Argument", style="cyan bold")
         subtable.add_column("Description", style="cyan")
+
         for explainer in response['arg_explanation']:
             if 'arg' in explainer and 'description' in explainer:
+                subtable.add_section()
                 subtable.add_row(explainer['arg'], explainer['description'])
+
         table.add_row("Arguments", subtable)
 
         table.add_section()
 
+    if 'user_request' in response and response['user_request'] != "":
+        table.add_row("User Request", f"[blue]{response['user_request']}[/blue]")
+        table.add_section()
 
 
     if 'notes' in response and response['notes'] != "":
