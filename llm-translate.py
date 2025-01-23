@@ -62,18 +62,27 @@ class Translation(BaseModel):
     english_translation: str
     language: str
     notes: str
-    breakdown: Optional[list[BreakdownPart]]
     error_message: Optional[str]
 
 
+class Translation_Breakdown(Translation):
+    breakdown: list[BreakdownPart]
+
+
 parser = argparse.ArgumentParser(description="Translate text into English.")
-# parser.add_argument(
-#     "--breakdown", help="Break down each word in the translation.", action="store_true"
-# )
+parser.add_argument(
+    "--breakdown", help="Break down each word in the translation.", action="store_true"
+)
 parser.add_argument("text", nargs="*", help="The text to translate.", type=str)
 args = parser.parse_args()
 
-args.breakdown = True  # HACK
+# args.breakdown = True  # HACK
+
+
+if args.breakdown:
+    translation_schema = Translation_Breakdown.model_json_schema()
+else:
+    translation_schema = Translation.model_json_schema()
 
 
 sprompt = SPROMPT.format(PROMPT_BREAKDOWN if args.breakdown else "")
@@ -89,7 +98,7 @@ try:
             {"role": "user", "content": " ".join(args.text)},
         ],
         options={"temperature": TEMPERATURE, "num_ctx": NUM_CTX},
-        format=Translation.model_json_schema(),
+        format=translation_schema,
     )
 
     response = response.get("message").get("content")
