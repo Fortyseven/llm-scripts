@@ -136,7 +136,7 @@ ResponseSchema: {self.response_schema}
                     {"role": "user", "content": " ".join(self.args.text)},
                 ],
                 options=options,
-                format=self.response_schema,
+                format=self.response_schema.model_json_schema(),
             )
 
             response = response.get("message").get("content")
@@ -159,5 +159,6 @@ ResponseSchema: {self.response_schema}
             return response
 
         except Exception as e:
-            print(f"ERROR: {e}")
+            print(f"ERROR: {e}\n\n")
+            raise e
             return {}

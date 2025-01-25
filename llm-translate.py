@@ -81,9 +81,9 @@ class Translator(LLMTool):
 
     def run(self) -> dict:
         if self.args.breakdown:
-            self.response_schema = Translation_WithBreakdown.model_json_schema()
+            self.response_schema = Translation_WithBreakdown
         else:
-            self.response_schema = Translation.model_json_schema()
+            self.response_schema = Translation
 
         self.sprompt = SPROMPT.format(
             PROMPT_BREAKDOWN if self.args.breakdown else "",
