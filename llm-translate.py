@@ -7,10 +7,7 @@ from rich.console import Console
 
 from common.LLMTool import LLMTool
 
-# This script borrows the filename + system prompt of another
-# tool already called "llm-cmd". I went looking for a good prompt
-# and found one exactly like what I was about to do. So let's
-# build on it.
+# -------------------------------------------------
 
 
 class BreakdownPart(BaseModel):
@@ -99,7 +96,12 @@ class Translator(LLMTool):
 # -------------------------------------------------
 
 llm_tool = Translator(
-    "Translate text into English.", MODEL, TEMPERATURE, NUM_CTX, Translation
+    description="Translate text into English.",
+    model=MODEL,
+    temperature=TEMPERATURE,
+    num_ctx=NUM_CTX,
+    seed=None,
+    response_schema=Translation,
 )
 
 response = llm_tool.run()
