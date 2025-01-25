@@ -100,7 +100,6 @@ llm_tool = Translator(
     model=MODEL,
     temperature=TEMPERATURE,
     num_ctx=NUM_CTX,
-    seed=None,
     response_schema=Translation,
 )
 
