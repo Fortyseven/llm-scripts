@@ -108,6 +108,12 @@ class LLMTool:
 
             response = json.loads(response)
 
+            if self.debug:
+                print("------------")
+                print(self.sprompt)
+                print("------------")
+                print(print(response))
+
             return response
 
         except Exception as e:

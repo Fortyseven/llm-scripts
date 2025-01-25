@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
-import json
 from typing import Optional
-import ollama
 from rich import print
 from pydantic import BaseModel
 from rich.table import Table
 from rich.console import Console
-
-import argparse
 
 from common.LLMTool import LLMTool
 
@@ -71,6 +66,7 @@ class Translator(LLMTool):
     def setup_arguments(self, provide_text=True):
         self.arg_parser.add_argument(
             "--breakdown",
+            "-b",
             help="Break down each word in the translation.",
             action="store_true",
         )
@@ -97,52 +93,41 @@ class Translator(LLMTool):
         return super().run()
 
 
+# -------------------------------------------------
+
 llm_tool = Translator(
     "Translate text into English.", MODEL, TEMPERATURE, NUM_CTX, Translation
 )
 
 response = llm_tool.run()
 
-try:
+table = Table(show_header=False, padding=(0, 1), show_lines=False, show_edge=False)
 
-    table = Table(show_header=False, padding=(0, 1), show_lines=False, show_edge=False)
+if "english_translation" in response and response["english_translation"] != "":
+    table.add_row("Translation", f"[yellow]{response['english_translation']}[/yellow]")
+    table.add_section()
 
-    if "english_translation" in response and response["english_translation"] != "":
-        table.add_row(
-            "Translation", f"[yellow]{response['english_translation']}[/yellow]"
-        )
-        table.add_section()
+if "language" in response and response["language"] != "":
+    table.add_row("Language", f"[cyan]{response['language']}[/cyan]")
+    table.add_section()
 
-    if "language" in response and response["language"] != "":
-        table.add_row("Language", f"[cyan]{response['language']}[/cyan]")
-        table.add_section()
+if "breakdown" in response and response["breakdown"] != "":
+    subtable = Table(
+        show_header=False, show_lines=False, padding=(0, 1), show_edge=False
+    )
+    subtable.add_column("Part", style="cyan")
+    subtable.add_column("Translation", style="yellow")
+    for part in response["breakdown"]:
+        subtable.add_row(part["part"], part["translation"])
+    table.add_row("Breakdown", subtable)
+    table.add_section()
 
-    if "breakdown" in response and response["breakdown"] != "":
-        subtable = Table(
-            show_header=False, show_lines=False, padding=(0, 1), show_edge=False
-        )
-        subtable.add_column("Part", style="cyan")
-        subtable.add_column("Translation", style="yellow")
-        for part in response["breakdown"]:
-            subtable.add_row(part["part"], part["translation"])
-        table.add_row("Breakdown", subtable)
-        table.add_section()
+if "notes" in response and response["notes"] != "":
+    table.add_row("Notes", f"[green]{response['notes']}[/green]")
+    table.add_section()
 
-    if "notes" in response and response["notes"] != "":
-        table.add_row("Notes", f"[green]{response['notes']}[/green]")
-        table.add_section()
+if "error_message" in response and response["error_message"] != "":
+    table.add_row("Error", f"[red]{response['error_message']}[/red]")
 
-    if "error_message" in response and response["error_message"] != "":
-        table.add_row("Error", f"[red]{response['error_message']}[/red]")
-
-    console = Console()
-    console.print(table)
-
-    if llm_tool.debug:
-        print(llm_tool.sprompt)
-        print()
-        print(console.print(response))
-
-
-except Exception as e:
-    print(f"ERROR: {e}\n{response if response else ''}")
+console = Console()
+console.print(table)
