@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from typing import Optional
-from rich import print
 from pydantic import BaseModel
 from rich.table import Table
 from rich.console import Console
@@ -12,6 +11,25 @@ from common.LLMTool import LLMTool
 # tool already called "llm-cmd". I went looking for a good prompt
 # and found one exactly like what I was about to do. So let's
 # build on it.
+
+
+class BreakdownPart(BaseModel):
+    part: str
+    translation: str
+
+
+class Translation(BaseModel):
+    english_translation: str
+    language: str
+    notes: str
+    error_message: Optional[str]
+
+
+class Translation_WithBreakdown(Translation):
+    breakdown: list[BreakdownPart]
+
+
+# -------------------------------------------------
 
 SPROMPT = """You are a world class professional language translator. Translate the text provided by the user into English. Translate the entire provided text.
 
@@ -41,25 +59,10 @@ MODEL = "mistral-small:latest"
 # MODEL = "deepseek-r1:14b"
 # MODEL = "deepseek-r1:32b"
 # MODEL = "llama3.2"
-OPTIONS = ""
 TEMPERATURE = 0.15
 NUM_CTX = 2048
 
-
-class BreakdownPart(BaseModel):
-    part: str
-    translation: str
-
-
-class Translation(BaseModel):
-    english_translation: str
-    language: str
-    notes: str
-    error_message: Optional[str]
-
-
-class Translation_WithBreakdown(Translation):
-    breakdown: list[BreakdownPart]
+# -------------------------------------------------
 
 
 class Translator(LLMTool):
