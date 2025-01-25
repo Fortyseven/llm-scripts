@@ -4,6 +4,7 @@ from typing import Optional, List, Dict, Any
 import json
 import ollama
 from pydantic import BaseModel
+from rich import print
 from rich.table import Table
 from rich.console import Console
 
@@ -36,9 +37,23 @@ class LLMTool:
         self.sprompt = ""
         self.response_schema = response_schema
         self.arg_parser = argparse.ArgumentParser(description=description)
+        self.seed = None
         self.args = None
         self.uses_text_args = False
         self.setup_arguments(uses_text_args)
+
+    # to string
+    def __str__(self):
+        return f"""
+Model: {self.model},
+Temperature: {self.temperature},
+NumCtx: {self.num_ctx},
+Seed: {self.seed},
+SPrompt: {self.sprompt},
+Args: {self.args},
+UsesTextArgs: {self.uses_text_args},
+ResponseSchema: {self.response_schema}
+"""
 
     @abstractmethod
     def setup_arguments(self, provide_text: bool = True):
@@ -48,6 +63,22 @@ class LLMTool:
 
         self.arg_parser.add_argument(
             "--model", "-m", help="Override default model", type=str, nargs="?"
+        )
+
+        self.arg_parser.add_argument(
+            "--temperature",
+            "-t",
+            help="Override default temperature",
+            type=float,
+            nargs="?",
+        )
+
+        self.arg_parser.add_argument(
+            "--seed",
+            "-s",
+            help="Force seed value",
+            type=int,
+            nargs="?",
         )
 
         if provide_text:
@@ -60,6 +91,12 @@ class LLMTool:
 
         if self.args.model:
             self.model = self.args.model.strip()
+
+        if self.args.temperature:
+            self.temperature = self.args.temperature
+
+        if self.args.seed is not None:
+            self.seed = self.args.seed
 
         if self.uses_text_args:
             if len(self.args.text) == 0:
@@ -85,6 +122,10 @@ class LLMTool:
             if self.num_ctx:
                 options["num_ctx"] = self.num_ctx
 
+            if self.seed is not None:
+                print(f"Using seed: {self.seed}")
+                options["seed"] = self.seed
+
             response = ollama.chat(
                 model=self.model,
                 messages=[
@@ -109,10 +150,11 @@ class LLMTool:
             response = json.loads(response)
 
             if self.debug:
-                print("------------")
-                print(self.sprompt)
-                print("------------")
-                print(print(response))
+                print("\n-- LLMTOOL ----------\n")
+                print(self)
+                print("\n-- RESPONSE ---------\n")
+                print(response)
+                print("\n------------\n")
 
             return response
 
