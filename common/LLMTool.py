@@ -14,16 +14,27 @@ class LLMTool:
         description: str,
         model: str,
         temperature: float,
-        num_ctx: int,
-        response_schema: object,
+        num_ctx: int = None,
+        response_schema: object = None,
         uses_text_args: bool = True,
     ):
+        """
+        Initialize the LLMTool class. This class is a base class for all LLM tools. It provides a common interface for setting up arguments and running the tool.
+
+        Args:
+            description (str): Description of the tool.
+            model (str): The model to use.
+            temperature (float): The inference temperature.
+            num_ctx (int): The number of contexts to use. Defaults to undefined.
+            response_schema (object, optional):  Defaults to None.
+            uses_text_args (bool, optional):  Defaults to True.
+        """
         self.debug = False
         self.model = model
         self.temperature = temperature
         self.num_ctx = num_ctx
         self.sprompt = ""
-        self.response_schema = None
+        self.response_schema = response_schema
         self.arg_parser = argparse.ArgumentParser(description=description)
         self.args = None
         self.uses_text_args = False
@@ -36,7 +47,7 @@ class LLMTool:
         )
 
         self.arg_parser.add_argument(
-            "--model", help="Override default model", type=str, nargs="?"
+            "--model", "-m", help="Override default model", type=str, nargs="?"
         )
 
         if provide_text:
@@ -66,6 +77,14 @@ class LLMTool:
         #     sys.exit(1)
 
         try:
+            options = {
+                "temperature": self.temperature,
+                "model": self.model,
+            }
+
+            if self.num_ctx:
+                options["num_ctx"] = self.num_ctx
+
             response = ollama.chat(
                 model=self.model,
                 messages=[
@@ -75,7 +94,7 @@ class LLMTool:
                     },
                     {"role": "user", "content": " ".join(self.args.text)},
                 ],
-                options={"temperature": self.temperature, "num_ctx": self.num_ctx},
+                options=options,
                 format=self.response_schema,
             )
 
