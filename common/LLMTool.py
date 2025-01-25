@@ -1,5 +1,6 @@
 from abc import abstractmethod
 import argparse
+import os
 from typing import Optional, List, Dict, Any
 import json
 import ollama
@@ -15,6 +16,7 @@ class LLMTool:
         description: str,
         model: str,
         temperature: float,
+        sprompt: str,
         num_ctx: int = None,
         response_schema: object = None,
         uses_text_args: bool = True,
@@ -34,12 +36,13 @@ class LLMTool:
         self.model = model
         self.temperature = temperature
         self.num_ctx = num_ctx
-        self.sprompt = ""
+        self.sprompt = sprompt
         self.response_schema = response_schema
         self.arg_parser = argparse.ArgumentParser(description=description)
         self.seed = None
         self.args = None
         self.uses_text_args = False
+        self.text_as_filepath = False
         self.setup_arguments(uses_text_args)
 
     # to string
@@ -56,7 +59,9 @@ ResponseSchema: {self.response_schema}
 """
 
     @abstractmethod
-    def setup_arguments(self, provide_text: bool = True):
+    def setup_arguments(
+        self, provide_text: bool = True, text_as_filepath: bool = False
+    ):
         self.arg_parser.add_argument(
             "--debug", help="Print debug information.", action="store_true"
         )
@@ -83,9 +88,15 @@ ResponseSchema: {self.response_schema}
 
         if provide_text:
             self.uses_text_args = True
-            self.arg_parser.add_argument(
-                "text", nargs="*", help="The text to translate.", type=str
-            )
+
+            if text_as_filepath:
+                self.arg_parser.add_argument(
+                    "text", nargs="*", help="Input file path", type=str
+                )
+            else:
+                self.arg_parser.add_argument(
+                    "text", nargs="*", help="The text to translate.", type=str
+                )
 
         self.args = self.arg_parser.parse_args()
 
@@ -103,15 +114,20 @@ ResponseSchema: {self.response_schema}
                 self.arg_parser.print_help()
                 exit(1)
 
+        if text_as_filepath and self.args.text:
+            self.text_as_filepath = self.args.text[0]
+
+            print(f"Input file: {self.text_as_filepath}")
+
+            if not os.path.exists(self.text_as_filepath):
+                print(f"File not found: {self.text_as_filepath}")
+                exit(1)
+
     @abstractmethod
     def run(self) -> dict:
 
         if self.args.debug:
             self.debug = True
-
-        # if len(args.text) == 0:
-        #     self.arg_parser.print_help()
-        #     sys.exit(1)
 
         try:
             options = {
@@ -126,15 +142,27 @@ ResponseSchema: {self.response_schema}
                 print(f"Using seed: {self.seed}")
                 options["seed"] = self.seed
 
+            messages = [
+                {"role": "system", "content": self.sprompt},
+            ]
+
+            if self.text_as_filepath:
+                user_msg = {"role": "user", "images": [self.text_as_filepath]}
+
+            else:
+                user_msg = {
+                    "role": "user",
+                    "content": " ".join(self.args.text),
+                }
+
+            messages.append(user_msg)
+
+            if self.debug:
+                print("message bundle:", messages)
+
             response = ollama.chat(
                 model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": self.sprompt,
-                    },
-                    {"role": "user", "content": " ".join(self.args.text)},
-                ],
+                messages=messages,
                 options=options,
                 format=self.response_schema.model_json_schema(),
             )

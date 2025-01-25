@@ -60,6 +60,7 @@ NUM_CTX = 2048
 llm_tool = LLMTool(
     description="Translate a command into a Linux command.",
     model=MODEL,
+    sprompt=SPROMPT,
     temperature=TEMPERATURE,
     num_ctx=NUM_CTX,
     response_schema=CmdResponse,

@@ -98,6 +98,7 @@ class Translator(LLMTool):
 llm_tool = Translator(
     description="Translate text into English.",
     model=MODEL,
+    sprompt=SPROMPT,
     temperature=TEMPERATURE,
     num_ctx=NUM_CTX,
     response_schema=Translation,
