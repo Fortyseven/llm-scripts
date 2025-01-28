@@ -16,7 +16,7 @@ class BreakdownPart(BaseModel):
 
 
 class Translation(BaseModel):
-    english_translation: str
+    translation_result: str
     language: str
     notes: str
     error_message: Optional[str]
@@ -28,21 +28,20 @@ class Translation_WithBreakdown(Translation):
 
 # -------------------------------------------------
 
-SPROMPT = """You are a world class professional language translator. Translate the text provided by the user into English. Translate the entire provided text.
-
-{}
+SPROMPT = """You are a world class professional language translator. Translate the text provided by the user into {0}{1}. Translate the entire provided text.
 
 - Provide the complete translation of the text.
 - Provide the language of the original text.
-- Provide a simple pronunciation of the translated text for native English speakers.
+- Provide a simple pronunciation of the translated text for native {0} speakers.
 - Provide any notes that might help give context for the translation.
 - Break down each part of the text and provide a translation for each part.
 - Do not invent or guess at a word's meaning. If you are unsure of a word's meaning, you may provide a literal translation of the word.
 - Do not process words that do not exist in the original text.
 - Keep responses concise and to the point.
 - Provide notes that might help give context for the translation.
+{2}
 
-{}
+{3}
 
 You may leave any of these blank if they are not applicable or helpful.
 
@@ -71,10 +70,21 @@ class Translator(LLMTool):
             action="store_true",
         )
         self.arg_parser.add_argument(
-            "--lang",
+            "--lang-from",
             help="Source language (defaults to auto-detecting).",
             type=str,
             nargs="?",
+        )
+        self.arg_parser.add_argument(
+            "--lang-to",
+            help="Target language (defaults to English).",
+            type=str,
+            default="English",
+            nargs="?",
+        )
+
+        self.arg_parser.add_argument(
+            "--text-only", help="Only return the translated text.", action="store_true"
         )
 
         return super().setup_arguments(provide_text)
@@ -86,8 +96,14 @@ class Translator(LLMTool):
             self.response_schema = Translation
 
         self.sprompt = SPROMPT.format(
-            PROMPT_BREAKDOWN if self.args.breakdown else "",
-            "Source language is " + self.args.lang if self.args.lang else "",
+            self.args.lang_to,  # 0
+            (" from " + self.args.lang_from) if self.args.lang_from else "",  # 1
+            (
+                ("The provided text language is written in " + self.args.lang_from)
+                if self.args.lang_from
+                else ""
+            ),  # 2
+            PROMPT_BREAKDOWN if self.args.breakdown else "",  # 3
         )
 
         return super().run()
@@ -96,7 +112,7 @@ class Translator(LLMTool):
 # -------------------------------------------------
 
 llm_tool = Translator(
-    description="Translate text into English.",
+    description="Translate text between languages.",
     model=MODEL,
     sprompt=SPROMPT,
     temperature=TEMPERATURE,
@@ -106,10 +122,14 @@ llm_tool = Translator(
 
 response = llm_tool.run()
 
+if llm_tool.args.text_only:
+    print(response["translation_result"])
+    exit()
+
 table = Table(show_header=False, padding=(0, 1), show_lines=False, show_edge=False)
 
-if "english_translation" in response and response["english_translation"] != "":
-    table.add_row("Translation", f"[yellow]{response['english_translation']}[/yellow]")
+if "translation_result" in response and response["translation_result"] != "":
+    table.add_row("Translation", f"[yellow]{response['translation_result']}[/yellow]")
     table.add_section()
 
 if "language" in response and response["language"] != "":
